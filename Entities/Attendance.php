@@ -4,10 +4,10 @@ namespace Modules\Attendance\Entities;
 
 use App\Models\User;
 use App\Models\Branch;
-use App\Models\SClass;
-use App\Models\Section;
-use App\Models\Student;
+use Modules\Student\Entities\Student;
+use Modules\Academics\Entities\SClass;
 use Illuminate\Database\Eloquent\Model;
+use Modules\Academics\Entities\Section;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 
 class Attendance extends Model

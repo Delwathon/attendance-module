@@ -4,13 +4,14 @@ namespace Modules\Attendance\Http\Controllers;
 
 use Carbon\Carbon;
 use App\Models\Branch;
-use App\Models\SClass;
-use App\Models\Section;
-use App\Models\Student;
 use App\Models\Employee;
 use Illuminate\Http\Request;
 use Illuminate\Routing\Controller;
 use Illuminate\Support\Facades\Auth;
+use Modules\Admission\Entities\Enrol;
+use Modules\Student\Entities\Student;
+use Modules\Academics\Entities\SClass;
+use Modules\Academics\Entities\Section;
 use Modules\Attendance\Entities\Attendance;
 use Illuminate\Contracts\Support\Renderable;
 
@@ -76,7 +77,7 @@ class StudentAttendanceController extends Controller
         $branch = Branch::find($branch);
         $section = Section::find($section);
         $class = SClass::find($class);
-        $students = Student::with(['branch', 'enrol', 'dept', 'user', 'state', 'lga', 'class', 'section', 'guardian'])
+        $enrols = Enrol::with(['branch', 'student', 'dept', 'class', 'section'])
             ->where([
                 'branch_id' => $branch->id,
                 'section_id' => $section->id,
@@ -94,16 +95,16 @@ class StudentAttendanceController extends Controller
         $employee_id = 1;
         $employees = Employee::all();
         foreach ($employees as $checkEmployee) {
-            if ($checkEmployee->user_id == Auth::user()->id) {
+            if ($checkEmployee->user_id == Auth::user()->id && $checkEmployee->branch_id == $branch->id) {
                 $employee_id = $checkEmployee->id;
                 break;
             }
         }
 
-        foreach ($students as $key => $student) {
+        foreach ($enrols as $key => $enrol) {
             $query = [
-                'student_id' => $student->id,
-                'user_id' => $student->user->id,
+                'student_id' => $enrol->student->id,
+                'user_id' => $enrol->student->user_id,
                 'branch_id' => $branch->id,
                 'section_id' => $section->id,
                 's_class_id' => $class->id,
@@ -196,7 +197,9 @@ class StudentAttendanceController extends Controller
         // return $day;
         $days = Carbon::now()->year($year)->month($month)->daysInMonth;
         // return $days;
-        $students = Student::with(['branch', 'attendances', 'dept', 'user', 'state', 'lga', 'class', 'section', 'guardian'])
+
+
+        $students = Student::with(['branch', 'enrol', 'attendances', 'user', 'state', 'lga', 'guardian'])
             ->whereHas('attendances', function ($query) use ($year, $month, $section, $branch, $class) {
                 $query
                     ->whereMonth('date', '=', $month)
